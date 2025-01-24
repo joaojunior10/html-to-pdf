@@ -1,29 +1,35 @@
 package joaojunior10.htmltopdf;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @RestController
 public class HtmlToPdfController {
 
     @PostMapping
     String convert(@RequestBody String html) throws IOException, InterruptedException {
+        html = addEncoding(html);
         File pdfFile = createPdf(html);
         byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(pdfFile));
         removeTmpFile(pdfFile);
         return new String(encoded);
     }
+
+    private String addEncoding(String html) {
+        Document doc = Jsoup.parse(html);
+        doc.charset(StandardCharsets.UTF_8);
+        return doc.html();
+    }
+
     
     private File createPdf(String html) throws IOException, InterruptedException {
         File htmlFile = File.createTempFile("input-", ".html");
